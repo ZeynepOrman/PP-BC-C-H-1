@@ -24,14 +24,44 @@ namespace PP_BC_C_H_1.Controllers
         }
 
         [HttpGet("list")]
-        public IActionResult List([FromQuery] string name)
+        public IActionResult List(string name = null, string sortBy = null, string sortOrder = "asc")
         {
-            var products = Products.Where(p => string.IsNullOrEmpty(name) || p.Name.Contains(name)).ToList();
-            return Ok(new { status = 200, data = products });
+            var products = Products.AsQueryable();
+
+            // Filter by name
+            if (!string.IsNullOrEmpty(name))
+            {
+                products = products.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Sort by specified field
+            if (!string.IsNullOrEmpty(sortBy))
+            {
+                if (sortOrder.Equals("desc", StringComparison.OrdinalIgnoreCase))
+                {
+                    products = sortBy switch
+                    {
+                        "name" => products.OrderByDescending(p => p.Name),
+                        "price" => products.OrderByDescending(p => p.Price),
+                        _ => products
+                    };
+                }
+                else
+                {
+                    products = sortBy switch
+                    {
+                        "name" => products.OrderBy(p => p.Name),
+                        "price" => products.OrderBy(p => p.Price),
+                        _ => products
+                    };
+                }
+            }
+
+            return Ok(new { status = 200, data = products.ToList() });
         }
 
         [HttpGet("{id}")]
-        public IActionResult Get(int id)
+        public IActionResult GetById(int id)
         {
             var product = Products.FirstOrDefault(p => p.Id == id);
             if (product == null)
@@ -47,9 +77,8 @@ namespace PP_BC_C_H_1.Controllers
             if (!result.IsValid)
                 return BadRequest(new { status = 400, errors = result.Errors });
 
-            product.Id = Products.Max(p => p.Id) + 1;
             Products.Add(product);
-            return CreatedAtAction(nameof(Get), new { id = product.Id }, new { status = 201, data = product });
+            return CreatedAtAction(nameof(GetById), new { id = product.Id }, new { status = 201, data = product });
         }
 
         [HttpPut("{id}")]
@@ -91,6 +120,11 @@ namespace PP_BC_C_H_1.Controllers
 
             if (product.Price > 0)
                 existingProduct.Price = product.Price;
+
+            // Validate the updated product
+            //ValidationResult result = _validator.Validate(existingProduct);
+            //if (!result.IsValid)
+            //    return BadRequest(new { status = 400, errors = result.Errors });
 
             return Ok(new { status = 200, data = existingProduct });
         }
