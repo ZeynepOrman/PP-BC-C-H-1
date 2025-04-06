@@ -7,4 +7,11 @@
     <RootNamespace>PP_BC_C_H_1</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.0" />
+  </ItemGroup>
+
 </Project>
