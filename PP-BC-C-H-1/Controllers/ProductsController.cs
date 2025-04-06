@@ -121,11 +121,6 @@ namespace PP_BC_C_H_1.Controllers
             if (product.Price > 0)
                 existingProduct.Price = product.Price;
 
-            // Validate the updated product
-            //ValidationResult result = _validator.Validate(existingProduct);
-            //if (!result.IsValid)
-            //    return BadRequest(new { status = 400, errors = result.Errors });
-
             return Ok(new { status = 200, data = existingProduct });
         }
     }
@@ -141,8 +136,19 @@ namespace PP_BC_C_H_1.Controllers
     {
         public ProductValidator()
         {
-            RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
-            RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than zero.");
+            RuleFor(x => x.Name)
+                .NotEmpty().WithMessage("Name is required.")
+                .Unless(x => IsPatchRequest());
+
+            RuleFor(x => x.Price)
+                .GreaterThan(0).WithMessage("Price must be greater than zero.")
+                .Unless(x => IsPatchRequest());
+        }
+
+        private bool IsPatchRequest()
+        {
+            var httpContext = new HttpContextAccessor().HttpContext;
+            return httpContext != null && httpContext.Request.Method.Equals("PATCH", StringComparison.OrdinalIgnoreCase);
         }
     }
 }
